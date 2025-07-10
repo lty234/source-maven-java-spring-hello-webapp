@@ -1,0 +1,57 @@
+pipeline {
+  agent none
+
+  stages {
+    stage('Checkout') {
+      agent {
+        docker { image 'maven:3-openjdk-17' }
+      }
+      steps {
+        git branch: 'main', url: 'https://github.com/lty234/source-maven-java-spring-hello-webapp.git'
+      }
+    }
+    stage('Build') {
+      agent {
+        docker { image 'maven:3-openjdk-17' }
+      }
+      steps {
+        sh 'mvn clean package -DskipTests=true'
+      }
+    }
+    stage('Test') {
+      agent {
+        docker { image 'maven:3-openjdk-17' }
+      }
+      steps {
+        sh 'mvn test'
+      }
+    }
+    stage('Build Docker Image') {
+      agent { label 'controller' }
+      steps {
+        sh 'docker image build -t xox1019/myweb:$BUILD_NUMBER'
+      }
+    }
+    stage('Tag Docker Image') {
+      agent { label 'controller' }
+      steps {
+        sh 'docker image tag xox1019/myweb:$BUILD_NUMBER xox1019/myweb:latest' // Tagging with build number
+      }
+    }
+    stage('Publish Docker Image') {
+      agent { label 'controller' }
+      steps {
+        withDockerRegistry(credentialsId: 'docker-registry-credential', url: 'https://index.docker.io/v1/') {
+          sh 'docker image push xox1019/myweb:$BUILD_NUMBER' // Tagging with build number
+          sh 'docker image push xox1019/myweb:latest' // Tagging with latest
+        }
+      }
+    }
+    stage('Run Docker Container') {
+      agent { label 'controller' }
+      steps {
+        sh 'docker container run --detach --name my-tomcat -p 80:8080 xox1019/myweb:latest'
+      }
+    }
+  }
+}
