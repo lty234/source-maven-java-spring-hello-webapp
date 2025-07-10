@@ -29,7 +29,7 @@ pipeline {
     stage('Build Docker Image') {
       agent { label 'controller' }
       steps {
-        sh 'docker image build -t xox1019/myweb:$BUILD_NUMBER'
+        sh 'docker image build -t xox1019/myweb:$BUILD_NUMBER .'
       }
     }
     stage('Tag Docker Image') {
