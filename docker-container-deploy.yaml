@@ -5,7 +5,7 @@
   - name: Create & Start Container
     docker_container:
       name: myweb
-      image: "xox1019/mywebansible:{{ lookup('env','BUILD_NUMBER') }}"
+      image: "xox1019/mywebansible:latest"
       state: started
       ports:
       - "80:8080"
